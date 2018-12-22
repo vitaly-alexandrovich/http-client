@@ -1,0 +1,15 @@
+{
+    "name": "vitaly-alexandrovich/http-client",
+    "description": "Very simple http client",
+    "authors": [
+        {
+            "name": "Vitaly",
+            "email": "personal.vitaly@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "HttpClient\\": "src/"
+        }
+    }
+}
