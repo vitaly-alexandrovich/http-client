@@ -1,6 +1,7 @@
 {
     "name": "vitaly-alexandrovich/http-client",
     "description": "Very simple http client",
+    "version": "0.0.1",
     "authors": [
         {
             "name": "Vitaly",
