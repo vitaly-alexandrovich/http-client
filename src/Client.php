@@ -1,8 +1,48 @@
 <?php namespace HttpClient;
+
+use HttpClient\testcase\EmptyTestCase;
+use HttpClient\testcase\TestCaseInterface;
+
 class Client
 {
     protected $cookies = [];
     protected $proxy;
+    /** @var TestCaseInterface */
+    protected static $testCase;
+
+    /**
+     * Client constructor.
+     */
+    public function __construct()
+    {
+        if (empty(static::getTestCase())) {
+            self::disableTestCase();
+        }
+    }
+
+    /**
+     * @param TestCaseInterface $testCase
+     */
+    public static function setTestCase(TestCaseInterface $testCase)
+    {
+        static::$testCase = $testCase;
+    }
+
+    /**
+     * Отключает тестовый режим
+     */
+    public static function disableTestCase()
+    {
+        self::setTestCase(new EmptyTestCase);
+    }
+
+    /**
+     * @return TestCaseInterface
+     */
+    public static function getTestCase()
+    {
+        return static::$testCase;
+    }
 
     /**
      * @param $url
@@ -29,6 +69,11 @@ class Client
      */
     public function sendRequest(Request $request)
     {
+        static::getTestCase()->throwException();
+        if (static::getTestCase()->mustReplaceResponse()){
+            return static::getTestCase()->getResponse();
+        }
+
         $ch = curl_init();
 
         $cookies = array_merge($this->cookies, $request->getCookies());
@@ -44,16 +89,16 @@ class Client
         }
 
         curl_setopt_array($ch, [
-            CURLOPT_URL             => $request->getUrl(),
-            CURLOPT_CUSTOMREQUEST   => $request->getMethod(),
-            CURLOPT_RETURNTRANSFER  => true,
-            CURLOPT_HEADER          => true,
-            CURLOPT_VERBOSE         => false,
-            CURLOPT_FOLLOWLOCATION  => true,
-            CURLOPT_MAXREDIRS       => 3,
-            CURLOPT_SSL_VERIFYPEER  => false,
-            CURLOPT_SSL_VERIFYHOST  => false,
-            CURLOPT_HTTPHEADER      => static::prepareHeaders($request->getHeaders()),
+            CURLOPT_URL            => $request->getUrl(),
+            CURLOPT_CUSTOMREQUEST  => $request->getMethod(),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER         => true,
+            CURLOPT_VERBOSE        => false,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS      => 3,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_HTTPHEADER     => static::prepareHeaders($request->getHeaders()),
         ]);
 
         if ($request->hasData()) {
@@ -70,8 +115,12 @@ class Client
             curl_setopt($ch, CURLOPT_PROXY, $proxy);
         }
 
+        foreach (self::getTestCase()->getOptions() as $option => $value){
+            curl_setopt($ch, $option, $value);
+        }
+
         $response_raw = curl_exec($ch);
-        $response = Response::createFromCurlResponse($response_raw, $ch);
+        $response     = Response::createFromCurlResponse($response_raw, $ch);
 
         curl_close($ch);
 
