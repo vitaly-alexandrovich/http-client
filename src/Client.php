@@ -102,7 +102,7 @@ class Client
         ]);
 
         if ($request->hasData()) {
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $request->getData());
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($request->getData()));
         }
 
         $proxy = $this->getProxy();
