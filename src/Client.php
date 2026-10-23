@@ -122,7 +122,6 @@ class Client
         $response_raw = curl_exec($ch);
         $response     = Response::createFromCurlResponse($response_raw, $ch);
 
-        curl_close($ch);
 
         foreach ($response->getCookies() as $cookieName => $cookieValue) {
             $this->setCookie($cookieName, $cookieValue);
